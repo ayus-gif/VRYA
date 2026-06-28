@@ -1,0 +1,2 @@
+EMAIL_USER=unpredictableanimator@gmail.com
+EMAIL_PASS=fszy elcu bxqt qtye

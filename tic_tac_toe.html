@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic Tac Toe — VYRA Games</title>
+    <meta name="description" content="Play Tic Tac Toe Clash on Vyra. Defeat the AI, build combos, and win cash prizes.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .game-header-section {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 3rem 2rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .btn-back {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition-fast);
+        }
+        .btn-back:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateX(-3px);
+        }
+        .game-profile-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem 6rem;
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 2rem;
+        }
+        .game-preview-card {
+            padding: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            min-height: 480px;
+        }
+        .game-banner-visual {
+            height: 320px;
+            background: linear-gradient(135deg, #a855f7, #ec4899);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            color: #fff;
+            text-align: center;
+        }
+        .game-banner-visual i {
+            font-size: 5rem;
+            margin-bottom: 1rem;
+            text-shadow: 0 10px 30px rgba(168, 85, 247, 0.5);
+        }
+        .game-banner-visual h1 {
+            font-family: var(--font-header);
+            font-size: 2.5rem;
+            font-weight: 900;
+        }
+        .game-play-area {
+            padding: 2.5rem;
+            text-align: center;
+            background: rgba(7, 8, 12, 0.3);
+            border-top: 1px solid var(--border-color);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+        }
+        
+        /* Game Canvas Overlays */
+        .game-screen-container {
+            display: none;
+            position: relative;
+            width: 100%;
+            height: 480px;
+            background: #05060b;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+        .game-stats-overlay {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            right: 15px;
+            display: flex;
+            justify-content: space-between;
+            pointer-events: none;
+            z-index: 10;
+        }
+        .stat-badge {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid var(--border-color);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            color: #fff;
+            font-weight: 700;
+            font-family: var(--font-header);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .stat-badge.score-badge {
+            color: var(--neon-green);
+        }
+        .stat-badge.timer-badge {
+            color: var(--neon-gold);
+        }
+        
+        /* Tic Tac Toe Grid */
+        .ttt-board {
+            display: grid;
+            grid-template-columns: repeat(3, 85px);
+            grid-template-rows: repeat(3, 85px);
+            gap: 8px;
+            background: var(--border-color);
+            padding: 10px;
+            border-radius: 12px;
+            margin-top: 2rem;
+        }
+        .ttt-cell {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            font-weight: 900;
+            font-family: var(--font-header);
+            cursor: pointer;
+            user-select: none;
+            transition: var(--transition-fast);
+        }
+        .ttt-cell:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .ttt-cell.x-val {
+            color: var(--neon-blue);
+            text-shadow: 0 0 10px rgba(0, 188, 255, 0.3);
+        }
+        .ttt-cell.o-val {
+            color: #ff0055;
+            text-shadow: 0 0 10px rgba(255, 0, 85, 0.3);
+        }
+
+        .game-overlay-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(7, 8, 12, 0.9);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            text-align: center;
+            padding: 2rem;
+        }
+        .game-overlay-screen h2 {
+            font-family: var(--font-header);
+            font-size: 2.5rem;
+            color: var(--neon-gold);
+            margin-bottom: 0.5rem;
+            text-shadow: 0 0 15px rgba(255, 179, 0, 0.4);
+        }
+        .game-overlay-screen p {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+        .final-score {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--neon-green);
+            font-family: var(--font-header);
+            margin-bottom: 2rem;
+        }
+
+        .tournament-list-card {
+            padding: 2rem;
+            max-height: 560px;
+            display: flex;
+            flex-direction: column;
+        }
+        .tournament-list {
+            overflow-y: auto;
+            max-height: 440px;
+            padding-right: 8px;
+        }
+        .tournament-list-card h2 {
+            font-family: var(--font-header);
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .tournament-item {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            transition: var(--transition-fast);
+        }
+        .tournament-item:hover {
+            border-color: rgba(0, 255, 102, 0.2);
+            background: rgba(255, 255, 255, 0.04);
+        }
+        .tournament-info h4 {
+            font-size: 1.1rem;
+            margin-bottom: 0.25rem;
+        }
+        .tournament-info p {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+        .tournament-meta {
+            text-align: right;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .t-prize {
+            color: var(--neon-green);
+            font-weight: 800;
+            font-size: 1.1rem;
+        }
+        .t-entry {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+        .rules-card {
+            padding: 2rem;
+        }
+        .rules-card h3 {
+            font-family: var(--font-header);
+            font-size: 1.3rem;
+            margin-bottom: 1.25rem;
+            color: var(--neon-blue);
+        }
+        .rules-list {
+            list-style: none;
+        }
+        .rules-list li {
+            position: relative;
+            padding-left: 24px;
+            margin-bottom: 0.75rem;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+        .rules-list li::before {
+            content: '➔';
+            position: absolute;
+            left: 0;
+            color: var(--neon-green);
+        }
+        
+        @media (max-width: 900px) {
+            .game-profile-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Header -->
+    <header class="header">
+        <div class="nav-container">
+            <a href="index.html" class="logo">
+                <span class="logo-accent"><i class="fa-solid fa-crosshairs"></i></span> VYRA
+            </a>
+            
+            <nav class="nav-menu">
+                <a href="index.html#lobby" class="nav-link"><i class="fa-solid fa-gamepad"></i> Games Lobby</a>
+                <a href="index.html#leaderboard" class="nav-link"><i class="fa-solid fa-trophy"></i> Leaderboard</a>
+                <div class="user-balance-nav">
+                    <div class="currency cash"><i class="fa-solid fa-wallet"></i> ₹15.50</div>
+                    <div class="currency tokens"><i class="fa-solid fa-coins"></i> 450</div>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Header Actions -->
+    <div class="game-header-section">
+        <a href="index.html" class="btn-back"><i class="fa-solid fa-arrow-left"></i> Back to Lobby</a>
+        <div class="promo-badge"><i class="fa-solid fa-gamepad"></i> Board Classic</div>
+    </div>
+
+    <!-- Game Profile Section Grid -->
+    <main class="game-profile-grid">
+        <!-- Left Side: Game Launch Arena & Rules -->
+        <div class="grid-left">
+            <div class="glass-card game-preview-card" id="gameWindowCard">
+                
+                <!-- Start View -->
+                <div id="gameStartView" style="display: flex; flex-direction: column; height: 100%;">
+                    <div class="game-banner-visual">
+                        <i class="fa-solid fa-hashtag"></i>
+                        <h1>Tic Tac Toe</h1>
+                        <p style="color: rgba(255,255,255,0.7); max-width: 400px; margin-top: 0.5rem;">Defeat the opponent, align three X marks, and earn points for cash prizes.</p>
+                    </div>
+                    <div class="game-play-area">
+                        <h3 style="margin-bottom: 0.5rem;">Ready to match rows?</h3>
+                        <p style="color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.9rem;">You play as **X**, opponent plays as **O**. Earn 50 Pts on wins, 10 Pts on draws!</p>
+                        <button class="btn btn-primary btn-large" id="btnLaunchGame" style="min-width: 250px;">
+                            Play Training Battle <i class="fa-solid fa-play"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Active Play View -->
+                <div class="game-screen-container" id="gameCanvasContainer">
+                    <div class="game-stats-overlay">
+                        <div class="stat-badge score-badge">Score: <span id="gameScoreVal">0</span></div>
+                        <div class="stat-badge timer-badge">Time: <span id="gameTimerVal">45</span>s</div>
+                    </div>
+                    
+                    <!-- 3x3 Board -->
+                    <div class="ttt-board" id="tttBoard">
+                        <div class="ttt-cell" data-index="0"></div>
+                        <div class="ttt-cell" data-index="1"></div>
+                        <div class="ttt-cell" data-index="2"></div>
+                        <div class="ttt-cell" data-index="3"></div>
+                        <div class="ttt-cell" data-index="4"></div>
+                        <div class="ttt-cell" data-index="5"></div>
+                        <div class="ttt-cell" data-index="6"></div>
+                        <div class="ttt-cell" data-index="7"></div>
+                        <div class="ttt-cell" data-index="8"></div>
+                    </div>
+                    <p style="color: var(--neon-blue); font-size: 0.9rem; margin-top: 1.5rem; font-weight: 700;" id="gameTurnStatus">Your Turn (X)</p>
+                </div>
+
+                <!-- Game Over Screen View -->
+                <div class="game-overlay-screen" id="gameOverScreen">
+                    <h2>Game Finished!</h2>
+                    <p>Terrific tactical board play! Here is your final score:</p>
+                    <div class="final-score" id="finalScoreVal">0</div>
+                    <div style="display: flex; gap: 1rem;">
+                        <button class="btn btn-primary" id="btnRestartGame">Play Again <i class="fa-solid fa-rotate-left"></i></button>
+                        <a href="index.html" class="btn btn-secondary">Back to Lobby</a>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Rules Card -->
+            <div class="glass-card rules-card" style="margin-top: 2rem;">
+                <h3>Game Rules & Gameplay</h3>
+                <ul class="rules-list">
+                    <li>The game is played on a 3x3 grid.</li>
+                    <li>You are 'X', and your opponent is 'O'. Players take turns placing their marks.</li>
+                    <li>The first player to get 3 of their marks in a row (up, down, across, or diagonally) is the winner.</li>
+                    <li>Winning awards **+50 points**. A draw awards **+10 points**. Matches reset immediately on finish.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Right Side: Tournaments -->
+        <div class="grid-right">
+            <!-- Active Tournaments -->
+            <div class="glass-card tournament-list-card">
+                <h2><i class="fa-solid fa-money-bill-1-wave" style="color: var(--neon-green);"></i> Active Battles</h2>
+                <div class="tournament-list" id="tournamentContainer"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-bottom">
+            <p>&copy; 2026 VYRA Games. All rights reserved. 18+ only.</p>
+        </div>
+    </footer>
+
+    <!-- Interactive Game Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const btnLaunch = document.getElementById('btnLaunchGame');
+            const gameStartView = document.getElementById('gameStartView');
+            const gameCanvasContainer = document.getElementById('gameCanvasContainer');
+            const gameOverScreen = document.getElementById('gameOverScreen');
+            const boardCells = document.querySelectorAll('.ttt-cell');
+            const turnStatus = document.getElementById('gameTurnStatus');
+            const scoreLabel = document.getElementById('gameScoreVal');
+            const timerLabel = document.getElementById('gameTimerVal');
+            const finalScoreLabel = document.getElementById('finalScoreVal');
+            const btnRestart = document.getElementById('btnRestartGame');
+
+            let score = 0;
+            let timeRemaining = 45;
+            let gameInterval = null;
+            let isPlaying = false;
+            let isUserTurn = true;
+
+            let boardState = Array(9).fill(''); // '', 'X', or 'O'
+
+            const winPatterns = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+                [0, 3, 6], [1, 4, 7], [2, 5, 8], // Cols
+                [0, 4, 8], [2, 4, 6]             // Diagonals
+            ];
+
+            const checkWinner = (player) => {
+                return winPatterns.some(pattern => {
+                    return pattern.every(index => boardState[index] === player);
+                });
+            };
+
+            const checkDraw = () => {
+                return boardState.every(cell => cell !== '');
+            };
+
+            const resetBoard = () => {
+                boardState = Array(9).fill('');
+                boardCells.forEach(cell => {
+                    cell.innerText = '';
+                    cell.className = 'ttt-cell';
+                });
+                isUserTurn = true;
+                if (turnStatus) {
+                    turnStatus.innerText = "Your Turn (X)";
+                    turnStatus.style.color = "var(--neon-blue)";
+                }
+            };
+
+            const handleCellClick = (e) => {
+                if (!isPlaying || !isUserTurn) return;
+                const cell = e.target;
+                const idx = parseInt(cell.dataset.index);
+
+                if (boardState[idx] !== '') return;
+
+                // Player Turn
+                boardState[idx] = 'X';
+                cell.innerText = 'X';
+                cell.classList.add('x-val');
+
+                if (checkWinner('X')) {
+                    score += 50;
+                    scoreLabel.innerText = score;
+                    if (turnStatus) turnStatus.innerText = "You Won! 🎉";
+                    isUserTurn = false;
+                    setTimeout(resetBoard, 1200);
+                    return;
+                }
+
+                if (checkDraw()) {
+                    score += 10;
+                    scoreLabel.innerText = score;
+                    if (turnStatus) turnStatus.innerText = "It's a Draw! 🤝";
+                    isUserTurn = false;
+                    setTimeout(resetBoard, 1200);
+                    return;
+                }
+
+                // AI Turn
+                isUserTurn = false;
+                if (turnStatus) {
+                    turnStatus.innerText = "Opponent is thinking...";
+                    turnStatus.style.color = "#ff0055";
+                }
+
+                setTimeout(playAIMove, 600);
+            };
+
+            const playAIMove = () => {
+                if (!isPlaying) return;
+
+                // Smart AI decisions (1. Win, 2. Block, 3. Random)
+                let targetIdx = -1;
+
+                // 1. Can AI Win?
+                for (let i = 0; i < 9; i++) {
+                    if (boardState[i] === '') {
+                        boardState[i] = 'O';
+                        if (checkWinner('O')) {
+                            targetIdx = i;
+                            boardState[i] = '';
+                            break;
+                        }
+                        boardState[i] = '';
+                    }
+                }
+
+                // 2. Can AI Block Player?
+                if (targetIdx === -1) {
+                    for (let i = 0; i < 9; i++) {
+                        if (boardState[i] === '') {
+                            boardState[i] = 'X';
+                            if (checkWinner('X')) {
+                                targetIdx = i;
+                                boardState[i] = '';
+                                break;
+                            }
+                            boardState[i] = '';
+                        }
+                    }
+                }
+
+                // 3. Choose center
+                if (targetIdx === -1 && boardState[4] === '') {
+                    targetIdx = 4;
+                }
+
+                // 4. Choose random
+                if (targetIdx === -1) {
+                    const emptyCells = boardState.map((val, idx) => val === '' ? idx : null).filter(val => val !== null);
+                    if (emptyCells.length > 0) {
+                        targetIdx = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+                    }
+                }
+
+                if (targetIdx !== -1) {
+                    boardState[targetIdx] = 'O';
+                    const cell = boardContainerCell(targetIdx);
+                    if (cell) {
+                        cell.innerText = 'O';
+                        cell.classList.add('o-val');
+                    }
+
+                    if (checkWinner('O')) {
+                        if (turnStatus) turnStatus.innerText = "Opponent Won! 💀";
+                        setTimeout(resetBoard, 1200);
+                        return;
+                    }
+
+                    if (checkDraw()) {
+                        score += 10;
+                        scoreLabel.innerText = score;
+                        if (turnStatus) turnStatus.innerText = "It's a Draw! 🤝";
+                        setTimeout(resetBoard, 1200);
+                        return;
+                    }
+                }
+
+                isUserTurn = true;
+                if (turnStatus) {
+                    turnStatus.innerText = "Your Turn (X)";
+                    turnStatus.style.color = "var(--neon-blue)";
+                }
+            };
+
+            const boardContainerCell = (idx) => {
+                return document.querySelector(`.ttt-cell[data-index="${idx}"]`);
+            };
+
+            boardCells.forEach(cell => {
+                cell.addEventListener('click', handleCellClick);
+            });
+
+            const startGame = () => {
+                score = 0;
+                timeRemaining = 45;
+                scoreLabel.innerText = score;
+                timerLabel.innerText = timeRemaining;
+                isPlaying = true;
+
+                gameStartView.style.display = 'none';
+                gameOverScreen.style.display = 'none';
+                gameCanvasContainer.style.display = 'flex';
+                
+                resetBoard();
+
+                gameInterval = setInterval(() => {
+                    timeRemaining--;
+                    timerLabel.innerText = timeRemaining;
+                    if (timeRemaining <= 0) {
+                        endGame();
+                    }
+                }, 1000);
+            };
+
+            const endGame = async () => {
+                isPlaying = false;
+                clearInterval(gameInterval);
+
+                finalScoreLabel.innerText = score;
+                gameCanvasContainer.style.display = 'none';
+                gameOverScreen.style.display = 'flex';
+
+                // Check if running in free inGames mode
+                const urlParams = new URLSearchParams(window.location.search);
+                const isFreeMode = urlParams.get('mode') === 'free';
+                if (isFreeMode && score > 0) {
+                    const loggedInEmail = localStorage.getItem('userEmail') || 'guest@gmail.com';
+                    // Credit 1 Coin locally to userCoins
+                    let userCoins = parseInt(localStorage.getItem('userCoins')) || 0;
+                    userCoins += 1;
+                    localStorage.setItem('userCoins', userCoins.toString());
+
+                    // Post win to backend
+                    try {
+                        await fetch('/api/add-win-coin', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ email: loggedInEmail })
+                        });
+                    } catch (e) {
+                        console.error('Error posting free win:', e);
+                    }
+                }
+            };
+
+            btnLaunch.addEventListener('click', startGame);
+            btnRestart.addEventListener('click', startGame);
+
+            // --- WinZO Time-Wise Tournaments Scheduler ---
+            const tournamentContainer = document.getElementById('tournamentContainer');
+
+            const updateTournamentsList = () => {
+                if (!tournamentContainer) return;
+                
+                const now = new Date();
+                const currentHour = now.getHours();
+                const currentMinute = now.getMinutes();
+                const currentSecond = now.getSeconds();
+
+                const hour = currentHour;
+                const formattedHour = String(hour).padStart(2, '0') + ':00';
+                
+                // Current live tournament (ticks down to the end of the hour)
+                const minsLeft = 59 - currentMinute;
+                const secsLeft = 59 - currentSecond;
+                const countdown = `${String(minsLeft).padStart(2, '0')}m : ${String(secsLeft).padStart(2, '0')}s`;
+                
+                const statusText = `LIVE (Ends in: ${countdown})`;
+                const statusClass = 'live';
+                const actionButton = `<button class="btn btn-primary btn-join-contest" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; margin-top: 4px; background: #00ff66; color: #000;">Play Now</button>`;
+
+                // Tournament fee and prize based on slot (Free, 2 coins, 10 coins, 20 coins)
+                let fee = 'FREE';
+                let prize = '₹0.50';
+
+                const slot = hour % 4;
+                if (slot === 1) {
+                    fee = '2 <i class="fa-solid fa-coins"></i>';
+                    prize = '₹1.50';
+                } else if (slot === 2) {
+                    fee = '10 <i class="fa-solid fa-coins"></i>';
+                    prize = '₹5.50';
+                } else if (slot === 3) {
+                    fee = '20 <i class="fa-solid fa-coins"></i>';
+                    prize = '₹9.50';
+                }
+
+                let htmlContent = `
+                    <div class="tournament-item ${statusClass}" style="border-left: 4px solid var(--neon-green);">
+                        <div class="tournament-info">
+                            <h4 style="font-family: var(--font-header); font-size: 1rem;">Battle @ ${formattedHour}</h4>
+                            <p style="color: var(--neon-green); font-weight: bold;">${statusText}</p>
+                        </div>
+                        <div class="tournament-meta">
+                            <span class="t-prize">${prize}</span>
+                            <span class="t-entry">Fee: ${fee}</span>
+                            ${actionButton}
+                        </div>
+                    </div>
+                }
+
+                tournamentContainer.innerHTML = htmlContent;
+
+                const livePlayButtons = tournamentContainer.querySelectorAll('.btn-join-contest');
+                livePlayButtons.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        startGame();
+                    });
+                });
+            };
+
+            updateTournamentsList();
+            setInterval(updateTournamentsList, 1000);
+        });
+    </script>
+</body>
+</html>

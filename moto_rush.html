@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moto Rush — VYRA Games</title>
+    <meta name="description" content="Play Moto Rush on Vyra. Dodge traffic, collect coins, and win cash prizes.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .game-header-section {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 3rem 2rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .btn-back {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition-fast);
+        }
+        .btn-back:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateX(-3px);
+        }
+        .game-profile-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem 6rem;
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 2rem;
+        }
+        .game-preview-card {
+            padding: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            min-height: 480px;
+        }
+        .game-banner-visual {
+            height: 320px;
+            background: linear-gradient(135deg, #ffcc00, #ff6600);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            color: #fff;
+            text-align: center;
+        }
+        .game-banner-visual i {
+            font-size: 5rem;
+            margin-bottom: 1rem;
+            text-shadow: 0 10px 30px rgba(255, 102, 0, 0.5);
+        }
+        .game-banner-visual h1 {
+            font-family: var(--font-header);
+            font-size: 2.5rem;
+            font-weight: 900;
+        }
+        .game-play-area {
+            padding: 2.5rem;
+            text-align: center;
+            background: rgba(7, 8, 12, 0.3);
+            border-top: 1px solid var(--border-color);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        /* Game Canvas Styles */
+        .game-canvas-container {
+            display: none;
+            position: relative;
+            width: 100%;
+            height: 480px;
+            background: #15161e;
+        }
+        .game-stats-overlay {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            right: 15px;
+            display: flex;
+            justify-content: space-between;
+            pointer-events: none;
+            z-index: 10;
+        }
+        .stat-badge {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid var(--border-color);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            color: #fff;
+            font-weight: 700;
+            font-family: var(--font-header);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .stat-badge.score-badge {
+            color: var(--neon-green);
+        }
+        .stat-badge.timer-badge {
+            color: var(--neon-gold);
+        }
+        .game-canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .game-overlay-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(7, 8, 12, 0.9);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            text-align: center;
+            padding: 2rem;
+        }
+        .game-overlay-screen h2 {
+            font-family: var(--font-header);
+            font-size: 2.5rem;
+            color: var(--neon-gold);
+            margin-bottom: 0.5rem;
+            text-shadow: 0 0 15px rgba(255, 179, 0, 0.4);
+        }
+        .game-overlay-screen p {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+        .final-score {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--neon-green);
+            font-family: var(--font-header);
+            margin-bottom: 2rem;
+        }
+
+        .tournament-list-card {
+            padding: 2rem;
+            max-height: 560px;
+            display: flex;
+            flex-direction: column;
+        }
+        .tournament-list {
+            overflow-y: auto;
+            max-height: 440px;
+            padding-right: 8px;
+        }
+        .tournament-list-card h2 {
+            font-family: var(--font-header);
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .tournament-item {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            transition: var(--transition-fast);
+        }
+        .tournament-item:hover {
+            border-color: rgba(0, 255, 102, 0.2);
+            background: rgba(255, 255, 255, 0.04);
+        }
+        .tournament-info h4 {
+            font-size: 1.1rem;
+            margin-bottom: 0.25rem;
+        }
+        .tournament-info p {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+        .tournament-meta {
+            text-align: right;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .t-prize {
+            color: var(--neon-green);
+            font-weight: 800;
+            font-size: 1.1rem;
+        }
+        .t-entry {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+        .rules-card {
+            padding: 2rem;
+        }
+        .rules-card h3 {
+            font-family: var(--font-header);
+            font-size: 1.3rem;
+            margin-bottom: 1.25rem;
+            color: var(--neon-blue);
+        }
+        .rules-list {
+            list-style: none;
+        }
+        .rules-list li {
+            position: relative;
+            padding-left: 24px;
+            margin-bottom: 0.75rem;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+        .rules-list li::before {
+            content: '➔';
+            position: absolute;
+            left: 0;
+            color: var(--neon-green);
+        }
+        
+        @media (max-width: 900px) {
+            .game-profile-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Header -->
+    <header class="header">
+        <div class="nav-container">
+            <a href="index.html" class="logo">
+                <span class="logo-accent"><i class="fa-solid fa-crosshairs"></i></span> VYRA
+            </a>
+            
+            <nav class="nav-menu">
+                <a href="index.html#lobby" class="nav-link"><i class="fa-solid fa-gamepad"></i> Games Lobby</a>
+                <a href="index.html#leaderboard" class="nav-link"><i class="fa-solid fa-trophy"></i> Leaderboard</a>
+                <div class="user-balance-nav">
+                    <div class="currency cash"><i class="fa-solid fa-wallet"></i> ₹15.50</div>
+                    <div class="currency tokens"><i class="fa-solid fa-coins"></i> 450</div>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Header Actions -->
+    <div class="game-header-section">
+        <a href="index.html" class="btn-back"><i class="fa-solid fa-arrow-left"></i> Back to Lobby</a>
+        <div class="promo-badge"><i class="fa-solid fa-gamepad"></i> Action Arcade</div>
+    </div>
+
+    <!-- Game Profile Section Grid -->
+    <main class="game-profile-grid">
+        <!-- Left Side: Game Launch Arena & Rules -->
+        <div class="grid-left">
+            <div class="glass-card game-preview-card" id="gameWindowCard">
+                
+                <!-- Start View -->
+                <div id="gameStartView" style="display: flex; flex-direction: column; height: 100%;">
+                    <div class="game-banner-visual">
+                        <i class="fa-solid fa-motorcycle"></i>
+                        <h1>Moto Rush</h1>
+                        <p style="color: rgba(255,255,255,0.7); max-width: 400px; margin-top: 0.5rem;">Ride down the highway, dodge heavy vehicles, and collect coins to win real money.</p>
+                    </div>
+                    <div class="game-play-area">
+                        <h3 style="margin-bottom: 0.5rem;">Ready to speed and dodge?</h3>
+                        <p style="color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.9rem;">Move your mouse left/right to steer the bike. Avoid cars and barrier collisions!</p>
+                        <button class="btn btn-primary btn-large" id="btnLaunchGame" style="min-width: 250px;">
+                            Play Training Battle <i class="fa-solid fa-play"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Canvas Active View -->
+                <div class="game-canvas-container" id="gameCanvasContainer">
+                    <div class="game-stats-overlay">
+                        <div class="stat-badge score-badge">Score: <span id="gameScoreVal">0</span></div>
+                        <div class="stat-badge timer-badge">Time: <span id="gameTimerVal">45</span>s</div>
+                    </div>
+                    <canvas class="game-canvas" id="canvasGame"></canvas>
+                </div>
+
+                <!-- Game Over Screen View -->
+                <div class="game-overlay-screen" id="gameOverScreen">
+                    <h2>Race Finished!</h2>
+                    <p>Spectacular riding! Here is your final score:</p>
+                    <div class="final-score" id="finalScoreVal">0</div>
+                    <div style="display: flex; gap: 1rem;">
+                        <button class="btn btn-primary" id="btnRestartGame">Play Again <i class="fa-solid fa-rotate-left"></i></button>
+                        <a href="index.html" class="btn btn-secondary">Back to Lobby</a>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Rules Card -->
+            <div class="glass-card rules-card" style="margin-top: 2rem;">
+                <h3>Game Rules & Gameplay</h3>
+                <ul class="rules-list">
+                    <li>The motorcycle follows your mouse/cursor horizontally.</li>
+                    <li>Collect yellow Coins (🪙) to earn +10 points.</li>
+                    <li>Avoid oncoming vehicles (🚗, 🚚, 🚧). Hitting them inflicts a -30 points crash penalty!</li>
+                    <li>Survive and score as high as possible during the 45-second duration.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Right Side: Tournaments -->
+        <div class="grid-right">
+            <!-- Active Tournaments -->
+            <div class="glass-card tournament-list-card">
+                <h2><i class="fa-solid fa-money-bill-1-wave" style="color: var(--neon-green);"></i> Active Battles</h2>
+                <div class="tournament-list" id="tournamentContainer"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-bottom">
+            <p>&copy; 2026 VYRA Games. All rights reserved. 18+ only.</p>
+        </div>
+    </footer>
+
+    <!-- Interactive Game Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const btnLaunch = document.getElementById('btnLaunchGame');
+            const gameStartView = document.getElementById('gameStartView');
+            const gameCanvasContainer = document.getElementById('gameCanvasContainer');
+            const gameOverScreen = document.getElementById('gameOverScreen');
+            const canvas = document.getElementById('canvasGame');
+            const ctx = canvas.getContext('2d');
+            const scoreLabel = document.getElementById('gameScoreVal');
+            const timerLabel = document.getElementById('gameTimerVal');
+            const finalScoreLabel = document.getElementById('finalScoreVal');
+            const btnRestart = document.getElementById('btnRestartGame');
+
+            let score = 0;
+            let timeRemaining = 45;
+            let gameInterval = null;
+            let animationFrameId = null;
+            let isPlaying = false;
+
+            // Highway line offset for scrolling illusion
+            let roadOffset = 0;
+
+            // Player position
+            let playerX = 200;
+            const playerY = 380;
+            const playerWidth = 36;
+            const playerHeight = 60;
+
+            // Game Obstacles/Coins
+            let gameEntities = [];
+
+            const VEHICLE_EMOJIS = ['🚗', '🚙', '🚚', '🚧'];
+            const COIN_EMOJI = '🪙';
+
+            const resizeCanvas = () => {
+                canvas.width = gameCanvasContainer.clientWidth;
+                canvas.height = gameCanvasContainer.clientHeight;
+                playerX = canvas.width / 2;
+            };
+
+            // Track mouse movements to align player
+            canvas.addEventListener('mousemove', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const mX = e.clientX - rect.left;
+                // Keep player within road boundaries
+                playerX = Math.max(40, Math.min(canvas.width - 40, mX));
+            });
+
+            // Touch support for mobiles
+            canvas.addEventListener('touchmove', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const touch = e.touches[0];
+                const mX = touch.clientX - rect.left;
+                playerX = Math.max(40, Math.min(canvas.width - 40, mX));
+            });
+
+            class GameEntity {
+                constructor(x, y, isCoin) {
+                    this.x = x;
+                    this.y = y;
+                    this.isCoin = isCoin;
+                    this.emoji = isCoin ? COIN_EMOJI : VEHICLE_EMOJIS[Math.floor(Math.random() * VEHICLE_EMOJIS.length)];
+                    this.speed = Math.random() * 3 + 5; // vertical speed
+                    this.width = 30;
+                    this.height = 40;
+                }
+
+                update() {
+                    this.y += this.speed;
+                }
+
+                draw() {
+                    ctx.save();
+                    ctx.font = '36px Plus Jakarta Sans';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(this.emoji, this.x, this.y);
+                    ctx.restore();
+                }
+            }
+
+            const spawnEntity = () => {
+                if (!isPlaying) return;
+                const isCoin = Math.random() < 0.45; // 45% chance of coin
+                const spawnX = Math.random() * (canvas.width - 80) + 40;
+                gameEntities.push(new GameEntity(spawnX, -40, isCoin));
+
+                // Reschedule random spawn (600ms to 1200ms)
+                setTimeout(spawnEntity, Math.random() * 600 + 600);
+            };
+
+            const checkCollisions = () => {
+                gameEntities.forEach((entity, idx) => {
+                    // Simple bounding box checks
+                    const distY = Math.abs(entity.y - playerY);
+                    const distX = Math.abs(entity.x - playerX);
+
+                    if (distY < 40 && distX < 30) {
+                        // Collided! Remove item
+                        gameEntities.splice(idx, 1);
+
+                        if (entity.isCoin) {
+                            score += 10;
+                            scoreLabel.innerText = score;
+                        } else {
+                            // Hitted vehicle obstacle
+                            score = Math.max(0, score - 30);
+                            scoreLabel.innerText = score;
+                            triggerFlashScreen();
+                        }
+                    }
+                });
+            };
+
+            const triggerFlashScreen = () => {
+                canvas.style.background = '#ef4444';
+                setTimeout(() => {
+                    canvas.style.background = '#15161e';
+                }, 150);
+            };
+
+            const startGame = () => {
+                score = 0;
+                timeRemaining = 45;
+                scoreLabel.innerText = score;
+                timerLabel.innerText = timeRemaining;
+                gameEntities = [];
+                isPlaying = true;
+
+                gameStartView.style.display = 'none';
+                gameOverScreen.style.display = 'none';
+                gameCanvasContainer.style.display = 'block';
+                
+                resizeCanvas();
+                spawnEntity();
+
+                gameInterval = setInterval(() => {
+                    timeRemaining--;
+                    timerLabel.innerText = timeRemaining;
+                    if (timeRemaining <= 0) {
+                        endGame();
+                    }
+                }, 1000);
+
+                gameLoop();
+            };
+
+            const endGame = () => {
+                isPlaying = false;
+                clearInterval(gameInterval);
+                cancelAnimationFrame(animationFrameId);
+
+                finalScoreLabel.innerText = score;
+                gameCanvasContainer.style.display = 'none';
+                gameOverScreen.style.display = 'flex';
+            };
+
+            const gameLoop = () => {
+                if (!isPlaying) return;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                // --- Draw road lines (scrolling) ---
+                roadOffset = (roadOffset + 8) % 80;
+
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 4;
+                ctx.setLineDash([30, 50]);
+                ctx.lineDashOffset = -roadOffset;
+
+                // Draw lane dividers
+                ctx.beginPath();
+                ctx.moveTo(canvas.width / 3, 0);
+                ctx.lineTo(canvas.width / 3, canvas.height);
+                ctx.moveTo((canvas.width / 3) * 2, 0);
+                ctx.lineTo((canvas.width / 3) * 2, canvas.height);
+                ctx.stroke();
+                ctx.setLineDash([]); // reset
+
+                // Draw road shoulder boarders
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+                ctx.lineWidth = 10;
+                ctx.beginPath();
+                ctx.moveTo(20, 0);
+                ctx.lineTo(20, canvas.height);
+                ctx.moveTo(canvas.width - 20, 0);
+                ctx.lineTo(canvas.width - 20, canvas.height);
+                ctx.stroke();
+
+                // Update and draw entities (coins/cars)
+                gameEntities = gameEntities.filter(ent => ent.y < canvas.height + 40);
+                gameEntities.forEach(ent => {
+                    ent.update();
+                    ent.draw();
+                });
+
+                // Check collisions
+                checkCollisions();
+
+                // Draw Player motorcycle (🏍️)
+                ctx.save();
+                ctx.font = '50px Plus Jakarta Sans';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('🏍️', playerX, playerY);
+                ctx.restore();
+
+                animationFrameId = requestAnimationFrame(gameLoop);
+            };
+
+            btnLaunch.addEventListener('click', startGame);
+            btnRestart.addEventListener('click', startGame);
+
+            // --- WinZO Time-Wise Tournaments Scheduler ---
+            const tournamentContainer = document.getElementById('tournamentContainer');
+
+            const updateTournamentsList = () => {
+                if (!tournamentContainer) return;
+                
+                const now = new Date();
+                const currentHour = now.getHours();
+                const currentMinute = now.getMinutes();
+                const currentSecond = now.getSeconds();
+
+                const hour = currentHour;
+                const formattedHour = String(hour).padStart(2, '0') + ':00';
+                
+                // Current live tournament (ticks down to the end of the hour)
+                const minsLeft = 59 - currentMinute;
+                const secsLeft = 59 - currentSecond;
+                const countdown = `${String(minsLeft).padStart(2, '0')}m : ${String(secsLeft).padStart(2, '0')}s`;
+                
+                const statusText = `LIVE (Ends in: ${countdown})`;
+                const statusClass = 'live';
+                const actionButton = `<button class="btn btn-primary btn-join-contest" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; margin-top: 4px; background: #00ff66; color: #000;">Play Now</button>`;
+
+                // Tournament fee and prize based on slot (Free, 2 coins, 10 coins, 20 coins)
+                let fee = 'FREE';
+                let prize = '₹0.50';
+
+                const slot = hour % 4;
+                if (slot === 1) {
+                    fee = '2 <i class="fa-solid fa-coins"></i>';
+                    prize = '₹1.50';
+                } else if (slot === 2) {
+                    fee = '10 <i class="fa-solid fa-coins"></i>';
+                    prize = '₹5.50';
+                } else if (slot === 3) {
+                    fee = '20 <i class="fa-solid fa-coins"></i>';
+                    prize = '₹9.50';
+                }
+
+                let htmlContent = `
+                    <div class="tournament-item ${statusClass}" style="border-left: 4px solid var(--neon-gold);">
+                        <div class="tournament-info">
+                            <h4 style="font-family: var(--font-header); font-size: 1rem;">Battle @ ${formattedHour}</h4>
+                            <p style="color: var(--neon-gold); font-weight: bold;">${statusText}</p>
+                        </div>
+                        <div class="tournament-meta">
+                            <span class="t-prize">${prize}</span>
+                            <span class="t-entry">Fee: ${fee}</span>
+                            ${actionButton}
+                        </div>
+                    </div>
+                `;
+
+                tournamentContainer.innerHTML = htmlContent;
+
+                const livePlayButtons = tournamentContainer.querySelectorAll('.btn-join-contest');
+                livePlayButtons.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        startGame();
+                    });
+                });
+            };
+
+            updateTournamentsList();
+            setInterval(updateTournamentsList, 1000);
+
+            window.addEventListener('resize', () => {
+                if (isPlaying) resizeCanvas();
+            });
+        });
+    </script>
+</body>
+</html>
